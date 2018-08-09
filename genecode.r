@@ -151,19 +151,20 @@ server <- function(input, output, session) {
             propertiesList[[j]] <- df[[j]][i]
           }
         }
-        geneNode = createNode(graph, "Genecode", propertiesList)
+        Transcript = createNode(graph, "Transcript", propertiesList)
         
         field <- df[[omimIdField]][i]
-        #if(!is.null(field)){
-        #omimId = suppressWarnings(as.integer(field))
-        # node = getOrCreateNode(graph, "Gene", id=omimId)
-        #   createRel(geneNode, "Gene", node)
-#        }
+        if(!is.null(field)){
+          omimId = suppressWarnings(field)
+          unlist(omimId)
+          node = getOrCreateNode(graph, "Genecode", gene_id=as.character(omimId))
+          createRel(node, "LocateTranscript", Transcript)
+        }
         progress$set(value = i)
       }
     })
     return(head(df))
- })
+  })
   
 }
 
