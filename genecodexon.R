@@ -1,6 +1,6 @@
 library(shiny)
 library(RNeo4j)
-options(shiny.maxRequestSize=30*1024^2)
+options(shiny.maxRequestSize=400*1024^2)
 graph = startGraph("http://localhost:7474/db/data/", username="neo4j", password="Chmc7950")
 
 # Define UI for data upload app ----
@@ -151,19 +151,21 @@ server <- function(input, output, session) {
             propertiesList[[j]] <- df[[j]][i]
           }
         }
-        geneNode = createNode(graph, "Genecode", propertiesList)
+        Transcript = createNode(graph, "Exon", propertiesList)
         
         field <- df[[omimIdField]][i]
-        #if(!is.null(field)){
-        #omimId = suppressWarnings(as.integer(field))
-        # node = getOrCreateNode(graph, "Gene", id=omimId)
-        #   createRel(geneNode, "Gene", node)
-#        }
+        if(!is.null(field)){
+          omimId = suppressWarnings(field)
+          unique(omimId)
+          
+          node = getOrCreateNode(graph, "Transcript", gene_id=as.character(omimId))
+          createRel(Transcript, "LocateExon", Exon)
+        }
         progress$set(value = i)
       }
     })
     return(head(df))
- })
+  })
   
 }
 
