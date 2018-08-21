@@ -1,0 +1,10 @@
+{
+  "graphUrl": "http://localhost:7474/db/data/",
+  "username": "neo4j",
+  "password": "nsr",
+  "maxRequestSize": 30,
+  "labels": ["OMIM", "Gene", "Phenotype"],
+  "OMIM": ["id", "name"],
+  "Gene": ["id", "name", "mim"],
+  "Phenotype": ["id", "name"]
+}

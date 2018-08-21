@@ -1,4 +1,0 @@
-default:
-  graphUrl: http://localhost:7474/db/data/
-  username: neo4j
-  password: nsr
