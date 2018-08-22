@@ -6,5 +6,6 @@
   "labels": ["OMIM", "Gene", "Phenotype"],
   "OMIM": ["id", "name"],
   "Gene": ["id", "name", "mim"],
-  "Phenotype": ["id", "name"]
+  "Phenotype": ["id", "name"],
+  "Relationships": ["OMIM-to-Gene", "Gene-to-Phenotype", "OMIM-to-Phenotype"]
 }

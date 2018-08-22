@@ -62,7 +62,7 @@ createRelationshipUI <- fluidPage(
       uiOutput("node1Fields"),
       uiOutput("node2Fields"),
       
-      textInput("relationshipName", "Enter relationship name"),
+      selectInput("relationshipName", "Select Name of the Relationship", config$Relationships),
       
       uiOutput("createRelationElement")
       
@@ -155,12 +155,19 @@ server <- function(input, output, session) {
     field2 <- input$node2Fields
     query <- paste0("MATCH (l1:",label1,") RETURN l1.",field1)
     label1Ids <- cypherToList(graph, query)
+    
+    progress <- Progress$new(session, min=1, max=length(label1Ids))
+    on.exit(progress$close())
+    progress$set(message = paste("Creating relationships"), detail = 'This may take a while...')
+    
     count <- 0
     for(i in label1Ids){
       query <- paste0("MATCH (l1:",label1,") WHERE l1.",field1," = ",i," RETURN l1")
       leftNodes <- cypherToList(graph, query)
       query <- paste0("MATCH (l2:",label2,") WHERE l2.",field2," = ",i," RETURN l2")
       rightNodes <- cypherToList(graph, query)
+      count <- count+1
+      progress$set(value = count)
       if(length(rightNodes)==0){
         next
       }
@@ -168,10 +175,6 @@ server <- function(input, output, session) {
         for (rightNode in rightNodes) {
           createRel(leftNode$l1, input$relationshipName, rightNode$l2)
         }
-      }
-      count <- count+1
-      if(count==3){
-        break
       }
     }
   })
