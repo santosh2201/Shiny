@@ -1,11 +1,14 @@
 {
   "graphUrl": "http://localhost:7474/db/data/",
   "username": "neo4j",
-  "password": "nsr",
+  "password": "Chmc7950",
   "maxRequestSize": 30,
-  "labels": ["OMIM", "Gene", "Phenotype"],
-  "OMIM": ["id", "name"],
-  "Gene": ["id", "name", "mim"],
-  "Phenotype": ["id", "name"],
-  "Relationships": ["OMIM-to-Gene", "Gene-to-Phenotype", "OMIM-to-Phenotype"]
+  "labels": ["OMIM", "Gene", "Phenotype","Exon","GeneBody","Transcript"],
+  "OMIM": ["mimID", "Name","Prefix"],
+  "Gene": ["EntrezID", "Name", "mimID","Cytolocation","Chromosome","EnsembleID"],
+  "Phenotype": ["HPOID", "Name","Frequency","mimID","DBType","Modifier","Sex","Aspect"],
+  "GeneBody" : ["ID","Name","HavanaID","Start","end", "Strand"],
+  "Transcript" : ["ID","Name","GeneID","HavanaID","Start","end","type"],
+  "Exon" : ["ID","Exon Number","TranscriptID","Start","End"],
+  "Relationships": ["OMIM-to-Gene", "Gene-to-Phenotype", "OMIM-to-Phenotype","LocateTranscript","LocateExon"]
 }

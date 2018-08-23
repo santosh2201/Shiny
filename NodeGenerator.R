@@ -20,7 +20,7 @@ createNodeUI <- fluidPage(
     # Sidebar panel for inputs ----
     sidebarPanel(
       
-      selectInput("entityLabel","Entity Type", config$labels),
+      selectInput("entityLabel","Entity Type", config$labels,selected = "Gene"),
       
       # Input: Select a file ----
       fileInput("file1", "Choose CSV File", multiple = FALSE, accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv")),
@@ -29,7 +29,7 @@ createNodeUI <- fluidPage(
       tags$hr(),
       
       uiOutput("requiredFields"),
-
+      
       uiOutput("uploadBtn")
       
     ),
@@ -116,7 +116,7 @@ server <- function(input, output, session) {
         stop(safeError(e))
       }
     )
-
+    
     output$requiredFields <- renderUI({
       if (is.null(df)) return(NULL)
       lapply(1:length(config[[input$entityLabel]]), function(i) {
@@ -126,15 +126,15 @@ server <- function(input, output, session) {
     
     output$uploadBtn <- renderUI({
       if (is.null(df)) return(NULL)
-        actionButton("upload", "Upload", class = "btn-primary")
+      actionButton("upload", "Upload", class = "btn-primary")
     })
-
+    
     observeEvent(input$upload, {
       progress <- Progress$new(session, min=1, max=nrow(df))
       on.exit(progress$close())
       
       progress$set(message = paste("Uploading ",input$entityLabel," data to Neo4j"), detail = 'This may take a while...')
-
+      addConstraint(graph,input$entityLabel,config[[input$entityLabel]][1])
       for (i in 1:nrow(df)) {
         propertiesList <- list()
         for (field in config[[input$entityLabel]]) {
@@ -162,9 +162,9 @@ server <- function(input, output, session) {
     
     count <- 0
     for(i in label1Ids){
-      query <- paste0("MATCH (l1:",label1,") WHERE l1.",field1," = ",i," RETURN l1")
+      query <- paste0("MATCH (l1:",label1,") WHERE l1.",field1," = '",i,"' RETURN l1")
       leftNodes <- cypherToList(graph, query)
-      query <- paste0("MATCH (l2:",label2,") WHERE l2.",field2," = ",i," RETURN l2")
+      query <- paste0("MATCH (l2:",label2,") WHERE l2.",field2," = '",i,"' RETURN l2")
       rightNodes <- cypherToList(graph, query)
       count <- count+1
       progress$set(value = count)
