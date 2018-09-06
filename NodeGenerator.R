@@ -104,13 +104,10 @@ QueryUI <- fluidPage(
     
     # Main panel for displaying outputs ----
     mainPanel(
-      
       # Output: Data file ----
       tableOutput("results")
-      
     )
   )
-  
 )
 
 
@@ -148,13 +145,9 @@ server <- function(input, output, session) {
         query <- "MATCH p=(n:GeneBody)-[]->()-[]->() where n.id ={id} RETURN p"
         query <- paste0("MATCH p=(n:GeneBody)-[]->()-[]->() where n.id ='",input$searchValue,"' RETURN n.name,n.id,n.start,n.end,n.strand")
       }
-      
       df <- cypher(graph,query)
-      
       return (df)
-      
     })
-    
   })
   
   
@@ -199,7 +192,13 @@ server <- function(input, output, session) {
       on.exit(progress$close())
       
       progress$set(message = paste("Uploading ",input$entityLabel," data to Neo4j"), detail = 'This may take a while...')
-      #addConstraint(graph,input$entityLabel, "id")
+
+      #adding constraint
+      constraint <- getConstraint(graph, input$entityLabel)
+      if(is.null(constraint)){
+        addConstraint(graph,input$entityLabel, "id")
+      }
+
       for (i in 1:nrow(df)) {
         propertiesList <- list()
         if(is.na(df[[input[["id"]]]][i])){
@@ -231,9 +230,16 @@ server <- function(input, output, session) {
     
     count <- 0
     for(i in label1Ids){
-      query <- paste0("MATCH (l1:",label1,") WHERE l1.",field1," = '",i,"' RETURN l1")
+      id = i[[1]]
+      if(id=="" || is.na(id)){
+        next
+      }
+      if(is.character(id)){
+        id = paste0("'", id, "'")
+      }
+      query <- paste0("MATCH (l1:",label1,") WHERE l1.",field1," = ",id," RETURN l1")
       leftNodes <- cypherToList(graph, query)
-      query <- paste0("MATCH (l2:",label2,") WHERE l2.",field2," = '",i,"' RETURN l2")
+      query <- paste0("MATCH (l2:",label2,") WHERE l2.",field2," = ",id," RETURN l2")
       rightNodes <- cypherToList(graph, query)
       count <- count+1
       progress$set(value = count)
