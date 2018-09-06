@@ -1,14 +1,15 @@
 {
   "graphUrl": "http://localhost:7474/db/data/",
   "username": "neo4j",
-  "password": "Chmc7950",
+  "password": "nsr",
   "maxRequestSize": 30,
   "labels": ["OMIM", "Gene", "Phenotype","Exon","GeneBody","Transcript"],
-  "OMIM": ["mimID", "Name","Prefix"],
-  "Gene": ["EntrezID", "Name", "mimID","Cytolocation","Chromosome","EnsembleID"],
-  "Phenotype": ["HPOID", "Name","Frequency","mimID","DBType","Modifier","Sex","Aspect"],
-  "GeneBody" : ["ID","Name","HavanaID","Start","end", "Strand"],
-  "Transcript" : ["ID","Name","GeneID","HavanaID","Start","end","type"],
-  "Exon" : ["ID","Exon Number","TranscriptID","Start","End"],
-  "Relationships": ["OMIM-to-Gene", "Gene-to-Phenotype", "OMIM-to-Phenotype","LocateTranscript","LocateExon"]
+  "OMIM": ["id", "name","Prefix"],
+  "Gene": ["id", "name", "mimID","Cytolocation","Chromosome","EnsembleID"],
+  "Phenotype": ["id", "name","Frequency","mimID","DBType","Modifier","Sex","Aspect"],
+  "GeneBody" : ["id","name","HavanaID","Start","end", "Strand"],
+  "Transcript" : ["id","name","GeneID","HavanaID","Start","end","type"],
+  "Exon" : ["id","name","Exon Number","TranscriptID","Start","End"],
+  "Relationships": ["Gene-to-Phenotype", "OMIM-to-Gene", "OMIM-to-Phenotype", "Gene-Locates","LocateTranscript","LocateExon"],
+  "SearchType": ["EntrezID","Gene-Name","Phenotype-Series-Number","mimID","EnsembleID"]
 }

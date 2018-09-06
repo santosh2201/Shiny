@@ -152,12 +152,13 @@ server <- function(input, output, session) {
           }
         }
         HpoNode = createNode(graph, "Phenotype", propertiesList)
+        #addConstraint(graph, "OMIM", "id") 
         field <- df[[omimIdField]][i]
         if(!is.null(field) && grepl("OMIM:", field)){
           omimString = toString(df[[omimIdField]][i])
           omimId = suppressWarnings(as.integer(substr(omimString, 6, nchar(omimString))))
           node = getOrCreateNode(graph, "OMIM", id=omimId)
-          createRel(HpoNode, "pheToOmim", node)
+          createRel(HpoNode, "OMIM-to-Phenotype", node)
         }
         progress$set(value = i)
       }

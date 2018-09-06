@@ -82,6 +82,39 @@ createRelationshipUI <- fluidPage(
 
 
 
+QueryUI <- fluidPage(
+  # App title ----
+  titlePanel("Search Query"),
+  
+  # Sidebar layout with input and output definitions ----
+  sidebarLayout(
+    
+    # Sidebar panel for inputs ----
+    sidebarPanel(
+      
+      selectInput("searchType","Select search Criteria", config$SearchType),
+      textInput("searchValue", "Input the Fiels", value = "", width = NULL, placeholder = NULL),
+      
+      tags$hr(),
+      uiOutput("searchbtn")
+      
+      
+      
+    ),
+    
+    # Main panel for displaying outputs ----
+    mainPanel(
+      
+      # Output: Data file ----
+      tableOutput("results")
+      
+    )
+  )
+  
+)
+
+
+
 # Define server logic to read selected file ----
 server <- function(input, output, session) {
   
@@ -97,6 +130,38 @@ server <- function(input, output, session) {
   output$createRelationElement <- renderUI({
     actionButton("createRelationBtn", "Generate Relationships", class = "btn-primary")
   })
+  
+
+  
+  
+    
+  output$searchbtn <- renderUI({
+    actionButton("createSearchBtn", "Search", class = "btn-primary")
+  })
+  
+  
+  
+  observeEvent(input$createSearchBtn, {
+    output$results <- renderTable({
+      print(input$searchType)
+      if(input$searchType == "EnsembleID"){
+        query <- "MATCH p=(n:GeneBody)-[]->()-[]->() where n.id ={id} RETURN p"
+        query <- paste0("MATCH p=(n:GeneBody)-[]->()-[]->() where n.id ='",input$searchValue,"' RETURN n.name,n.id,n.start,n.end,n.strand")
+      }
+      
+      df <- cypher(graph,query)
+      
+      return (df)
+      
+    })
+    
+  })
+  
+  
+  
+  
+  
+  
   
   output$contents <- renderTable({
     
@@ -134,11 +199,15 @@ server <- function(input, output, session) {
       on.exit(progress$close())
       
       progress$set(message = paste("Uploading ",input$entityLabel," data to Neo4j"), detail = 'This may take a while...')
-      addConstraint(graph,input$entityLabel,config[[input$entityLabel]][1])
+      #addConstraint(graph,input$entityLabel, "id")
       for (i in 1:nrow(df)) {
         propertiesList <- list()
+        if(is.na(df[[input[["id"]]]][i])){
+          next
+        }
         for (field in config[[input$entityLabel]]) {
           propertiesList[[field]] <- df[[input[[field]]]][i]
+          
         }
         createNode(graph, input$entityLabel, propertiesList)
         progress$set(value = i)
@@ -184,7 +253,7 @@ server <- function(input, output, session) {
 ui <- fluidPage(tabsetPanel(
   tabPanel("Create Nodes", createNodeUI),
   tabPanel("Create Relationships", createRelationshipUI),
-  tabPanel("Query", "contents")))
+  tabPanel("Query", QueryUI)))
 
 # Create Shiny app ----
 shinyApp(ui, server)
