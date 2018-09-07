@@ -29,7 +29,7 @@ createNodeUI <- fluidPage(
       tags$hr(),
       
       uiOutput("requiredFields"),
-      
+
       uiOutput("uploadBtn")
       
     ),
@@ -115,7 +115,8 @@ QueryUI <- fluidPage(
 # Define server logic to read selected file ----
 server <- function(input, output, session) {
   
-  
+  selectField <- "Select"
+  error <- FALSE
   output$node1Fields <- renderUI({
     selectInput("node1Fields","Select a property from node 1", config[[input$node1]])
   })
@@ -136,8 +137,6 @@ server <- function(input, output, session) {
     actionButton("createSearchBtn", "Search", class = "btn-primary")
   })
   
-  
-  
   observeEvent(input$createSearchBtn, {
     output$results <- renderTable({
       print(input$searchType)
@@ -151,11 +150,7 @@ server <- function(input, output, session) {
   })
   
   
-  
-  
-  
-  
-  
+ 
   output$contents <- renderTable({
     
     # input$file1 will be NULL initially. After the user selects
@@ -177,8 +172,9 @@ server <- function(input, output, session) {
     
     output$requiredFields <- renderUI({
       if (is.null(df)) return(NULL)
+      choices <- c(list(selectField), names(df))
       lapply(1:length(config[[input$entityLabel]]), function(i) {
-        selectInput(config[[input$entityLabel]][i], paste0('Select ', config[[input$entityLabel]][i]), names(df))
+        selectInput(config[[input$entityLabel]][i], strong(paste0('Select ', config[[input$entityLabel]][i])), choices)
       })
     })
     
@@ -188,9 +184,9 @@ server <- function(input, output, session) {
     })
     
     observeEvent(input$upload, {
+
       progress <- Progress$new(session, min=1, max=nrow(df))
       on.exit(progress$close())
-      
       progress$set(message = paste("Uploading ",input$entityLabel," data to Neo4j"), detail = 'This may take a while...')
 
       #adding constraint
@@ -206,13 +202,11 @@ server <- function(input, output, session) {
         }
         for (field in config[[input$entityLabel]]) {
           propertiesList[[field]] <- df[[input[[field]]]][i]
-          
         }
-        createNode(graph, input$entityLabel, propertiesList)
+        getOrCreateNode(graph, input$entityLabel, propertiesList)
         progress$set(value = i)
       }
     })
-    
     return(head(df))
   })
   
