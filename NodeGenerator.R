@@ -8,78 +8,9 @@ options(shiny.maxRequestSize=(config$maxRequestSize*1024^2))
 graph = startGraph(config$graphUrl, username=config$username, password=config$password)
 
 
-# Define UI for data upload app ----
-createNodeUI <- fluidPage(
-  
-  # App title ----
-  titlePanel("Uploading Files"),
-  
-  # Sidebar layout with input and output definitions ----
-  sidebarLayout(
-    
-    # Sidebar panel for inputs ----
-    sidebarPanel(
-      
-      selectInput("entityLabel","Entity Type", config$labels,selected = "Gene"),
-      
-      # Input: Select a file ----
-      fileInput("file1", "Choose CSV File", multiple = FALSE, accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv")),
-      
-      # Horizontal line ----
-      tags$hr(),
-      
-      uiOutput("requiredFields"),
+source("NodeUI.R")
 
-      uiOutput("uploadBtn")
-      
-    ),
-    
-    # Main panel for displaying outputs ----
-    mainPanel(
-      
-      # Output: Data file ----
-      tableOutput("contents")
-      
-    )
-  )
-)
-
-
-
-createRelationshipUI <- fluidPage(
-  # App title ----
-  titlePanel("Creating Relationships"),
-  
-  # Sidebar layout with input and output definitions ----
-  sidebarLayout(
-    
-    # Sidebar panel for inputs ----
-    sidebarPanel(
-      
-      selectInput("node1","Select Node 1", config$labels),
-      selectInput("node2","Select Node 2", config$labels),
-      
-      uiOutput("node1Fields"),
-      uiOutput("node2Fields"),
-      
-      selectInput("relationshipName", "Select Name of the Relationship", config$Relationships),
-      
-      uiOutput("createRelationElement")
-      
-      
-    ),
-    
-    # Main panel for displaying outputs ----
-    mainPanel(
-      
-      # Output: Data file ----
-      #uiOutput("relationshipUI")
-      
-    )
-  )
-  
-)
-
+source("RelationshipUI.R")
 
 
 QueryUI <- fluidPage(
@@ -97,9 +28,6 @@ QueryUI <- fluidPage(
       
       tags$hr(),
       uiOutput("searchbtn")
-      
-      
-      
     ),
     
     # Main panel for displaying outputs ----
@@ -190,11 +118,12 @@ server <- function(input, output, session) {
       progress$set(message = paste("Uploading ",input$entityLabel," data to Neo4j"), detail = 'This may take a while...')
 
       #adding constraint
+      #dropConstraint(graph,input$entityLabel, "id")
       constraint <- getConstraint(graph, input$entityLabel)
-      if(is.null(constraint)){
+      if(is.null(constraint) || nrow(constraint)==0){
         addConstraint(graph,input$entityLabel, "id")
       }
-
+      print(getConstraint(graph,input$entityLabel));
       for (i in 1:nrow(df)) {
         propertiesList <- list()
         if(is.na(df[[input[["id"]]]][i])){
@@ -215,37 +144,42 @@ server <- function(input, output, session) {
     label2 <- input$node2
     field1 <- input$node1Fields
     field2 <- input$node2Fields
-    query <- paste0("MATCH (l1:",label1,") RETURN l1.",field1)
-    label1Ids <- cypherToList(graph, query)
+    #query <- paste0("MATCH (l1:",label1,") RETURN l1.",field1)
+    #label1Ids <- cypherToList(graph, query)
     
-    progress <- Progress$new(session, min=1, max=length(label1Ids))
-    on.exit(progress$close())
-    progress$set(message = paste("Creating relationships"), detail = 'This may take a while...')
+    #progress <- Progress$new(session, min=1, max=length(label1Ids))
+    #on.exit(progress$close())
+    #progress$set(message = paste("Creating relationships"), detail = 'This may take a while...')
     
-    count <- 0
-    for(i in label1Ids){
-      id = i[[1]]
-      if(id=="" || is.na(id)){
-        next
-      }
-      if(is.character(id)){
-        id = paste0("'", id, "'")
-      }
-      query <- paste0("MATCH (l1:",label1,") WHERE l1.",field1," = ",id," RETURN l1")
-      leftNodes <- cypherToList(graph, query)
-      query <- paste0("MATCH (l2:",label2,") WHERE l2.",field2," = ",id," RETURN l2")
-      rightNodes <- cypherToList(graph, query)
-      count <- count+1
-      progress$set(value = count)
-      if(length(rightNodes)==0){
-        next
-      }
-      for (leftNode in leftNodes) {
-        for (rightNode in rightNodes) {
-          createRel(leftNode$l1, input$relationshipName, rightNode$l2)
-        }
-      }
-    }
+    #count <- 0
+    #for(i in label1Ids){
+    #  id = i[[1]]
+    #  if(id=="" || is.na(id)){
+    #    next
+    #  }
+    #  if(is.character(id)){
+    #    id = paste0("'", id, "'")
+    #  }
+    #  query <- paste0("MATCH (l1:",label1,") WHERE l1.",field1," = ",id," RETURN l1")
+    #  leftNodes <- cypherToList(graph, query)
+    #  query <- paste0("MATCH (l2:",label2,") WHERE l2.",field2," = ",id," RETURN l2")
+    #  rightNodes <- cypherToList(graph, query)
+    #  count <- count+1
+    #  progress$set(value = count)
+    #  if(length(rightNodes)==0){
+    #    next
+    #  }
+    #  for (leftNode in leftNodes) {
+    #    for (rightNode in rightNodes) {
+    #      createRel(leftNode$l1, input$relationshipName, rightNode$l2)
+    #    }
+    #  }
+    #}
+    
+    query <- paste0("MATCH (l1:",label1,"), (l2:",label2,") WHERE l1.",field1,"=l2.",field2," CREATE (l1)-[:",input$relationshipName,"]->(l2)")
+    cypherToList(graph, query)
+    print("Completed")
+    
   })
   
 }
