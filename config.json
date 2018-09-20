@@ -11,28 +11,23 @@
   },
   "Gene": {
     "properties": ["id", "name", "cytoLocation", "chromosome", "ensembleID"],
-    "createRelation": true,
-    "relation": {"field1": "id", "field2": "omimId", "properties": []}
+    "createRelation": true
   },
   "Phenotype": {
     "properties": ["id", "name", "frequency", "dBType", "modifier", "sex", "aspect"],
-    "createRelation": true,
-    "relation": {"field1": "id", "field2": "omimId", "properties": []}
+    "createRelation": true
   },
   "GeneBody" : {
     "properties": ["id", "name", "havanaID", "start", "end", "strand"],
-    "createRelation": false,
-    "relation": {}
+    "createRelation": false
   },
   "Transcript" : {
     "properties": ["id", "name", "geneID", "havanaID", "start", "end", "type"],
-    "createRelation": false,
-    "relation": {}
+    "createRelation": false
   },
   "Exon" : {
     "properties": ["id", "name", "exonNumber", "transcriptID", "start", "end"],
-    "createRelation": false,
-    "relation": {}
+    "createRelation": false
   },
   "Relationships": ["GeneToOMIM", "PhenotypeCauses", "GeneLocates","locateTranscript","locateExon"],
   "GeneToOMIM" : {
@@ -50,5 +45,5 @@
   "locateExon" : {
     "fromNode": "", "toNode": "", "fromField": "", "toField": ""
   },
-  "SearchType": ["EntrezID","Gene-Name","Phenotype-Series-Number","mimID","EnsembleID"]
+  "SearchType": ["EntrezID", "Gene-Name", "Phenotype-Series-Number", "mimID", "EnsembleID"]
 }

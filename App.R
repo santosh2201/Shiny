@@ -7,7 +7,11 @@ config <- fromJSON(file="config.json")
 options(shiny.maxRequestSize=(config$maxRequestSize*1024^2))
 graph = startGraph(config$graphUrl, username=config$username, password=config$password)
 
-
+# Variables
+entity <- NULL
+selectField <- "Select"
+df <- NULL
+nodesPerRequest <- 100
 
 ui <- fluidPage(
   titlePanel("Data Uploader"),
@@ -15,12 +19,13 @@ ui <- fluidPage(
     sidebarPanel(
       selectInput("entityLabel","Entity Type", config$labels, selected = "Gene"),
       uiOutput("fileInputWrapper"),
-      tags$hr(),
       uiOutput("requiredFields"),
       tags$hr(),
       uiOutput("relationshipNameWrapper"),
       uiOutput("ToFieldInFromNodeWrapper"),
-      uiOutput("uploadBtn")
+      #uiOutput("uploadBtn")
+      uiOutput("showError"),
+      actionButton("upload", "Upload", class = "btn-primary")
     ),
     
     mainPanel(
@@ -29,31 +34,23 @@ ui <- fluidPage(
   )
 )
 
-
-entity <- NULL
-
 # Define server logic to read selected file ----
 server <- function(input, output, session) {
   
+  # Gets updated on change in entity select box
   output$fileInputWrapper <- renderUI({
     entity <<- input$entityLabel
-    fileInput("file1", paste0("Upload ",input$entityLabel," file"), multiple = FALSE, accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv"))
+    fileInput("file1", paste0("Upload ", entity," file"), multiple = FALSE, accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv"))
   })
   
   output$contents <- renderTable({
-    
     req(input$file1)
-    tryCatch(
-      {
-        df <- fread(input$file1$datapath)
+    tryCatch({
+        df <<- fread(input$file1$datapath)
       },
       error = function(e) {
         stop(safeError(e))
-      }
-    )
-    
-    
-    selectField <- "Select"
+      })
     
     output$requiredFields <- renderUI({
       if (is.null(df)) return(NULL)
@@ -73,93 +70,94 @@ server <- function(input, output, session) {
       selectInput("relationshipName", "Select Name of the Relationship", c(list(selectField), config$Relationships))
     })
 
-    output$uploadBtn <- renderUI({
-      if (is.null(df)){
-        return(NULL)
-      }
-      nodeProperties <- config[[entity]]$properties
-      for (field in nodeProperties) {
-        if(is.null(input[[field]]) || input[[field]] == selectField){
-          return(NULL)
-        }
-      }
-      if(config[[entity]]$createRelation && (is.null(input[["relationshipName"]]) || input[["relationshipName"]] == selectField || is.null(input[["ToFieldInFromNode"]]) || input[["ToFieldInFromNode"]] == selectField)){
-        return(NULL)
-      }
-      actionButton("upload", "Upload", class = "btn-primary")
-    })
-    
-    observeEvent(input$upload, {
-      print("uploading")
-      if (is.null(df)){
-        return(NULL)
-      }
-      nodeProperties <- config[[entity]]$properties
-      for (field in nodeProperties) {
-        if(is.null(input[[field]]) || input[[field]] == selectField){
-          return(NULL)
-        }
-      }
-      if(config[[entity]]$createRelation && (is.null(input[["relationshipName"]]) || input[["relationshipName"]] == selectField || is.null(input[["ToFieldInFromNode"]]) || input[["ToFieldInFromNode"]] == selectField)){
-        return(NULL)
-      }
-      nodesPerRequest <- 100
-      progress <- Progress$new(session, min=1, max=nrow(df)/nodesPerRequest)
-      on.exit(progress$close())
-      progress$set(message = paste("Uploading ",input$entityLabel," data to Neo4j"), detail = 'This may take a while...')
-      
-      constraint <- getConstraint(graph, input$entityLabel)
-      if(is.null(constraint) || nrow(constraint)==0){
-        addConstraint(graph,input$entityLabel, "id")
-      }
-      
-      propertiesList <- list()
-      relationshipList <- list()
-      entity <- input$entityLabel
-      nodeProperties <- config[[entity]]$properties
-      if(config[[entity]]$createRelation){
-        relationshipName <- input[["relationshipName"]]
-        relationshipConfig <- config[[relationshipName]]
-      }
-      counter <- 0
-      print(input[["id"]])
-      for (i in 1:nrow(df)) {
-        properties <- list()
-        if(is.na(df[[input[["id"]]]][i])){
-          next
-        }
-        for (field in nodeProperties) {
-          properties[[field]] <- df[[input[[field]]]][i]
-        }
-        
-        counter <- counter+1
-        propertiesList[[counter]] = properties
-        if(config[[entity]]$createRelation){
-          relationship <- list()
-          relationship[["fromId"]] = df[[input[[relationshipConfig$fromField]]]][i]
-          relationship[["toId"]] = df[[input[["ToFieldInFromNode"]]]][i]
-          relationshipList[[counter]] = relationship
-        }
-        if (counter==nodesPerRequest) {
-          nodeQuery <- paste0("UNWIND {propertiesList} AS properties MERGE (n:",entity," {id: properties.id}) SET n = properties")
-          print(i)
-          cypher(graph, nodeQuery, propertiesList = propertiesList)
-          if(config[[entity]]$createRelation){
-            relationQuery <- paste0("UNWIND {relationshipList} AS relationship
-              MATCH (a:",relationshipConfig$fromNode," {",relationshipConfig$fromField,": relationship.fromId}),
-                (b:",relationshipConfig$toNode," {",relationshipConfig$toField,": relationship.toId})
-                MERGE (a)-[r:",relationshipName,"]->(b)")
-            cypher(graph, relationQuery, relationshipList = relationshipList)
-          }
-          progress$set(value = i %/% nodesPerRequest)
-          counter <- 0
-          break
-        }
-      }
-    })
     return(head(df))
+  })
+
+
+  observeEvent(input$upload, {
+    # Below line to make this reactive element work
+    print("test")
+    error <- FALSE
+    errorMsg <- NULL
+    if (is.null(df)){
+      error = TRUE
+      errorMsg = "Please upload an input file"
+    }
+    nodeProperties <- config[[entity]]$properties
+    if(!error){
+      for (field in nodeProperties) {
+        if(is.null(input[[field]]) || input[[field]] == selectField){
+          error = TRUE
+          errorMsg = "Please select all node properties"
+        }
+      } 
+    }
+    if(!error && config[[entity]]$createRelation && (is.null(input[["relationshipName"]]) || input[["relationshipName"]] == selectField || is.null(input[["ToFieldInFromNode"]]) || input[["ToFieldInFromNode"]] == selectField)){
+      error = TRUE
+      errorMsg = "Please select relationship fields"
+    }
+    
+    output$showError <- renderText({
+      if(error){
+        return(errorMsg)
+      }
+      return(NULL)
+    })
+    if(error){
+      return(NULL)
+    }
+
+    progress <- Progress$new(session, min=1, max=nrow(df)/nodesPerRequest)
+    on.exit(progress$close())
+    progress$set(message = paste("Uploading ",entity," data to Neo4j"), detail = 'This may take a while...')
+    
+    constraint <- getConstraint(graph, entity)
+    if(is.null(constraint) || nrow(constraint)==0){
+      addConstraint(graph, entity, "id")
+    }
+    
+    propertiesList <- list()
+    relationshipList <- list()
+    nodeProperties <- config[[entity]]$properties
+    if(config[[entity]]$createRelation){
+      relationshipName <- input[["relationshipName"]]
+      relationshipConfig <- config[[relationshipName]]
+    }
+    counter <- 0
+    print(input[["id"]])
+    for (i in 1:nrow(df)) {
+      properties <- list()
+      if(is.na(df[[input[["id"]]]][i])){
+        next
+      }
+      for (field in nodeProperties) {
+        properties[[field]] <- df[[input[[field]]]][i]
+      }
+      
+      counter <- counter+1
+      propertiesList[[counter]] = properties
+      if(config[[entity]]$createRelation){
+        relationship <- list()
+        relationship[["fromId"]] = df[[input[[relationshipConfig$fromField]]]][i]
+        relationship[["toId"]] = df[[input[["ToFieldInFromNode"]]]][i]
+        relationshipList[[counter]] = relationship
+      }
+      if (counter==nodesPerRequest) {
+        nodeQuery <- paste0("UNWIND {propertiesList} AS properties MERGE (n:",entity," {id: properties.id}) SET n = properties")
+        print(i)
+        cypher(graph, nodeQuery, propertiesList = propertiesList)
+        if(config[[entity]]$createRelation){
+          relationQuery <- paste0("UNWIND {relationshipList} AS relationship
+                                  MATCH (a:",relationshipConfig$fromNode," {",relationshipConfig$fromField,": relationship.fromId}),
+                                  (b:",relationshipConfig$toNode," {",relationshipConfig$toField,": relationship.toId})
+                                  MERGE (a)-[r:",relationshipName,"]->(b)")
+          cypher(graph, relationQuery, relationshipList = relationshipList)
+        }
+        progress$set(value = i %/% nodesPerRequest)
+        counter <- 0
+      }
+    }
   })
 }
 
-#, "frequency", "dBType", "modifier", "sex", "aspect"
 shinyApp(ui, server)
