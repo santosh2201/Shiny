@@ -1,3 +1,8 @@
+library(shiny)
+library(RNeo4j)
+library(data.table)
+library(rjson)
+
 config <- fromJSON(file="config.json")
 options(shiny.maxRequestSize=(config$maxRequestSize*1024^2))
 graph = startGraph(config$graphUrl, username=config$username, password=config$password)
@@ -15,7 +20,7 @@ createNodeUI <- fluidPage(
     # Sidebar panel for inputs ----
     sidebarPanel(
       
-      selectInput("entityLabel","Entity Type", config$labels,selected = "Gene"),
+      selectInput("entityLabel","Entity Type", config$labels, selected = "Gene"),
       
       # Input: Select a file ----
       fileInput("file1", "Choose CSV File", multiple = FALSE, accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv")),
