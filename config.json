@@ -3,13 +3,47 @@
   "username": "neo4j",
   "password": "nsr",
   "maxRequestSize": 30,
-  "labels": ["OMIM", "Gene", "Phenotype","Exon","GeneBody","Transcript"],
-  "OMIM": ["id", "name","prefix"],
-  "Gene": ["id", "name", "mimID","cytoLocation","chromosome","ensembleID"],
-  "Phenotype": ["id", "name","frequency","mimID","dBType","modifier","sex","aspect"],
-  "GeneBody" : ["id","name","havanaID","start","end", "strand"],
-  "Transcript" : ["id","name","geneID","havanaID","start","end","type"],
-  "Exon" : ["id","name","exonNumber","transcriptID","start","end"],
-  "Relationships": ["Gene_to_Phenotype", "OMIM_to_Gene", "OMIM_to_Phenotype", "Gene_Locates","locateTranscript","locateExon"],
-  "SearchType": ["EntrezID","Gene-Name","Phenotype-Series-Number","mimID","EnsembleID"]
+  "labels": ["OMIM", "Gene", "Phenotype", "Exon", "GeneBody", "Transcript"],
+  "OMIM": {
+    "properties": ["id", "name", "prefix"],
+    "createRelation": false,
+    "relation": {}
+  },
+  "Gene": {
+    "properties": ["id", "name", "cytoLocation", "chromosome", "ensembleID"],
+    "createRelation": true
+  },
+  "Phenotype": {
+    "properties": ["id", "name", "frequency", "dBType", "modifier", "sex", "aspect"],
+    "createRelation": true
+  },
+  "GeneBody" : {
+    "properties": ["id", "name", "havanaID", "start", "end", "strand"],
+    "createRelation": false
+  },
+  "Transcript" : {
+    "properties": ["id", "name", "geneID", "havanaID", "start", "end", "type"],
+    "createRelation": false
+  },
+  "Exon" : {
+    "properties": ["id", "name", "exonNumber", "transcriptID", "start", "end"],
+    "createRelation": false
+  },
+  "Relationships": ["GeneToOMIM", "PhenotypeCauses", "GeneLocates","locateTranscript","locateExon"],
+  "GeneToOMIM" : {
+    "fromNode": "Gene", "toNode": "OMIM", "fromField": "id", "toField": "id"
+  },
+  "PhenotypeCauses" : {
+    "fromNode": "Phenotype", "toNode": "OMIM", "fromField": "id", "toField": "id"
+  },
+  "GeneLocates" : {
+    "fromNode": "", "toNode": "", "fromField": "", "toField": ""
+  },
+  "locateTranscript" : {
+    "fromNode": "", "toNode": "", "fromField": "", "toField": ""
+  },
+  "locateExon" : {
+    "fromNode": "", "toNode": "", "fromField": "", "toField": ""
+  },
+  "SearchType": ["EntrezID", "Gene-Name", "Phenotype-Series-Number", "mimID", "EnsembleID"]
 }

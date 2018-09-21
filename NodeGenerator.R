@@ -44,7 +44,7 @@ QueryUI <- fluidPage(
 server <- function(input, output, session) {
   
   selectField <- "Select"
-  error <- FALSE
+  #error <- FALSE
   output$node1Fields <- renderUI({
     selectInput("node1Fields","Select a property from node 1", config[[input$node1]])
   })
@@ -123,7 +123,7 @@ server <- function(input, output, session) {
       if(is.null(constraint) || nrow(constraint)==0){
         addConstraint(graph,input$entityLabel, "id")
       }
-      print(getConstraint(graph,input$entityLabel));
+      #print(getConstraint(graph,input$entityLabel));
       for (i in 1:nrow(df)) {
         propertiesList <- list()
         if(is.na(df[[input[["id"]]]][i])){
