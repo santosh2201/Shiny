@@ -24,9 +24,10 @@ QueryUI <- fluidPage(
     sidebarPanel(
       
       selectInput("searchType","Select search Criteria", config$SearchType),
-      textInput("searchValue", "Input the Fiels", value = "", width = NULL, placeholder = NULL),
+      textInput("searchValue", "Input the Fields", value = "", width = NULL, placeholder = NULL),
       
       tags$hr(),
+      
       uiOutput("searchbtn")
     ),
     
@@ -67,13 +68,24 @@ server <- function(input, output, session) {
   
   observeEvent(input$createSearchBtn, {
     output$results <- renderTable({
-      print(input$searchType)
-      if(input$searchType == "EnsembleID"){
-        query <- "MATCH p=(n:GeneBody)-[]->()-[]->() where n.id ={id} RETURN p"
-        query <- paste0("MATCH p=(n:GeneBody)-[]->()-[]->() where n.id ='",input$searchValue,"' RETURN n.name,n.id,n.start,n.end,n.strand")
+      if(input$searchType == "EntrezID"){
+        query <- 
+        paste0("MATCH (MIM:OMIM)-[t:CAUSE]->(Gene:Gene)-[s:Located]->(GeneBody:GeneBody)-[r:LocateTranscript]->(Transcript:Transcript)-[q:LocateExon]->(Exon:Exon) where Gene.id =",input$searchValue," RETURN MIM.name,MIM.id,Gene.name,Gene.id,Gene.Cytolocation,GeneBody.Start,GeneBody.end,GeneBody.Strand,Transcript.Start,Transcript.end,Transcript.type")
+      }                                     
+      else if(input$searchType == "EnsembleID"){
+        query <- 
+          paste0("MATCH (MIM:OMIM)-[t:CAUSE]->(Gene:Gene)-[s:Located]->(GeneBody:GeneBody)-[r:LocateTranscript]->(Transcript:Transcript)-[q:LocateExon]->(Exon:Exon) where Gene.EnsembleID = '",input$searchValue,"' RETURN MIM.name,MIM.id,Gene.name,Gene.id,Gene.Cytolocation,GeneBody.Start,GeneBody.end,GeneBody.Strand,Transcript.Start,Transcript.end,Transcript.type")
+      }
+      else if(input$searchType == "mimID"){
+        query <- 
+          paste0("MATCH (MIM:OMIM)-[t:CAUSE]->(Gene:Gene)-[s:Located]->(GeneBody:GeneBody)-[r:LocateTranscript]->(Transcript:Transcript)-[q:LocateExon]->(Exon:Exon) where Gene.mimID = ",input$searchValue," RETURN MIM.name,MIM.id,Gene.name,Gene.id,Gene.Cytolocation,GeneBody.Start,GeneBody.end,GeneBody.Strand,Transcript.Start,Transcript.end,Transcript.type")
+      }
+      else if(input$searchType == "Gene Symbol"){
+        query <- 
+          paste0("MATCH (MIM:OMIM)-[t:CAUSE]->(Gene:Gene)-[s:Located]->(GeneBody:GeneBody)-[r:LocateTranscript]->(Transcript:Transcript)-[q:LocateExon]->(Exon:Exon) where GeneBody.name = '",input$searchValue,"' RETURN MIM.name,MIM.id,Gene.name,Gene.id,Gene.Cytolocation,GeneBody.Start,GeneBody.end,GeneBody.Strand,Transcript.Start,Transcript.end,Transcript.type")
       }
       df <- cypher(graph,query)
-      return (df)
+      return (head(df))
     })
   })
   
@@ -118,12 +130,11 @@ server <- function(input, output, session) {
       progress$set(message = paste("Uploading ",input$entityLabel," data to Neo4j"), detail = 'This may take a while...')
 
       #adding constraint
-      #dropConstraint(graph,input$entityLabel, "id")
       constraint <- getConstraint(graph, input$entityLabel)
       if(is.null(constraint) || nrow(constraint)==0){
         addConstraint(graph,input$entityLabel, "id")
       }
-      #print(getConstraint(graph,input$entityLabel));
+
       for (i in 1:nrow(df)) {
         propertiesList <- list()
         if(is.na(df[[input[["id"]]]][i])){
