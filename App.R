@@ -40,6 +40,7 @@ server <- function(input, output, session) {
   # Gets updated on change in entity select box
   output$fileInputWrapper <- renderUI({
     entity <<- input$entityLabel
+    df <<- NULL
     fileInput("file1", paste0("Upload ", entity," file"), multiple = FALSE, accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv"))
   })
   
@@ -76,7 +77,6 @@ server <- function(input, output, session) {
 
   observeEvent(input$upload, {
     # Below line to make this reactive element work
-    print("test")
     error <- FALSE
     errorMsg <- NULL
     if (is.null(df)){
@@ -124,7 +124,6 @@ server <- function(input, output, session) {
       relationshipConfig <- config[[relationshipName]]
     }
     counter <- 0
-    print(input[["id"]])
     for (i in 1:nrow(df)) {
       properties <- list()
       if(is.na(df[[input[["id"]]]][i])){
@@ -144,7 +143,6 @@ server <- function(input, output, session) {
       }
       if (counter==nodesPerRequest) {
         nodeQuery <- paste0("UNWIND {propertiesList} AS properties MERGE (n:",entity," {id: properties.id}) SET n = properties")
-        print(i)
         cypher(graph, nodeQuery, propertiesList = propertiesList)
         if(config[[entity]]$createRelation){
           relationQuery <- paste0("UNWIND {relationshipList} AS relationship
