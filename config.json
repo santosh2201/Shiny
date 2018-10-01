@@ -5,29 +5,22 @@
   "maxRequestSize": 30,
   "labels": ["OMIM", "Gene", "Phenotype", "Exon", "GeneBody", "Transcript"],
   "OMIM": {
-    "properties": ["id", "name", "prefix"],
-    "createRelation": false,
-    "relation": {}
+    "properties": ["id", "name", "prefix"]
   },
   "Gene": {
-    "properties": ["id", "name", "cytoLocation", "chromosome", "ensembleID"],
-    "createRelation": true
+    "properties": ["id", "name", "cytoLocation", "chromosome", "ensembleID"]
   },
   "Phenotype": {
-    "properties": ["id", "name", "frequency", "dBType", "modifier", "sex", "aspect"],
-    "createRelation": true
+    "properties": ["id", "name", "frequency", "dBType", "modifier", "sex", "aspect"]
   },
   "GeneBody" : {
-    "properties": ["id", "name", "havanaID", "start", "end", "strand"],
-    "createRelation": false
+    "properties": ["id", "name", "havanaID", "start", "end", "strand"]
   },
   "Transcript" : {
-    "properties": ["id", "name", "geneID", "havanaID", "start", "end", "type"],
-    "createRelation": false
+    "properties": ["id", "name", "geneID", "havanaID", "start", "end", "type"]
   },
   "Exon" : {
-    "properties": ["id", "name", "exonNumber", "transcriptID", "start", "end"],
-    "createRelation": false
+    "properties": ["id", "name", "exonNumber", "transcriptID", "start", "end"]
   },
   "Relationships": ["GeneToOMIM", "PhenotypeCauses", "GeneLocates","locateTranscript","locateExon"],
   "GeneToOMIM" : {
