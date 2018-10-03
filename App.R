@@ -11,7 +11,7 @@ graph = startGraph(config$graphUrl, username=config$username, password=config$pa
 entity <- NULL
 selectField <- "Select"
 df <- NULL
-nodesPerRequest <- 100
+nodesPerRequest <- 500
 
 ui <- fluidPage(
   titlePanel("Data Uploader"),
@@ -144,7 +144,7 @@ server <- function(input, output, session) {
       }
       if (counter==nodesPerRequest) {
         nodeQuery <- paste0("UNWIND {propertiesList} AS properties MERGE (n:",entity," {id: properties.id}) SET n = properties")
-        print(i)
+        #print(i)
         cypher(graph, nodeQuery, propertiesList = propertiesList)
         if(config[[entity]]$createRelation){
           relationQuery <- paste0("UNWIND {relationshipList} AS relationship
