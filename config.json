@@ -1,26 +1,33 @@
 {
-  "graphUrl": "http://localhost:7474/db/data/",
+  "graphUrl": "http://zlab1.chmccorp.cchmc.org:7474/db/data/",
   "username": "neo4j",
-  "password": "nsr",
-  "maxRequestSize": 30,
+  "password": "neo$pass",
+  "maxRequestSize": 400,
   "labels": ["OMIM", "Gene", "Phenotype", "Exon", "GeneBody", "Transcript"],
   "OMIM": {
-    "properties": ["id", "name", "prefix"]
+    "properties": ["id", "name", "prefix"],
+    "createRelation": false,
+    "relation": {}
   },
   "Gene": {
-    "properties": ["id", "name", "cytoLocation", "chromosome", "ensembleID"]
+    "properties": ["id", "symbol", "name", "Cytolocation", "ensembleID", "summary"],
+    "createRelation": true
   },
   "Phenotype": {
-    "properties": ["id", "name", "frequency", "dBType", "modifier", "sex", "aspect"]
+    "properties": ["id", "name", "frequency", "dBType", "modifier", "sex", "aspect"],
+    "createRelation": true
   },
   "GeneBody" : {
-    "properties": ["id", "name", "havanaID", "start", "end", "strand"]
+    "properties": ["id", "name", "havanaID", "start", "end", "strand"],
+    "createRelation": true
   },
   "Transcript" : {
-    "properties": ["id", "name", "geneID", "havanaID", "start", "end", "type"]
+    "properties": ["id", "name", "havanaID", "start", "end", "type"],
+    "createRelation": true
   },
   "Exon" : {
-    "properties": ["id", "name", "exonNumber", "transcriptID", "start", "end"]
+    "properties": ["id", "name", "exonNumber", "transcriptID", "start", "end"],
+    "createRelation": true
   },
   "Relationships": ["GeneToOMIM", "PhenotypeCauses", "GeneLocates","locateTranscript","locateExon"],
   "GeneToOMIM" : {
@@ -30,13 +37,13 @@
     "fromNode": "Phenotype", "toNode": "OMIM", "fromField": "id", "toField": "id"
   },
   "GeneLocates" : {
-    "fromNode": "", "toNode": "", "fromField": "", "toField": ""
+    "fromNode": "Gene", "toNode": "GeneBody", "fromField": "id", "toField": "id"
   },
   "locateTranscript" : {
-    "fromNode": "", "toNode": "", "fromField": "", "toField": ""
+    "fromNode": "Transcript", "toNode": "GeneBody", "fromField": "id", "toField": "id"
   },
   "locateExon" : {
-    "fromNode": "", "toNode": "", "fromField": "", "toField": ""
+    "fromNode": "Exon", "toNode": "Transcript", "fromField": "id", "toField": "id"
   },
   "SearchType": ["EntrezID", "Gene-Name", "Phenotype-Series-Number", "mimID", "EnsembleID"]
 }
