@@ -15,6 +15,9 @@ ui <- fluidPage(
     sidebarPanel(
       selectInput("entityLabel","Entity Type", config$labels, selected = entity),
       uiOutput("entityFields"),
+      textInput('PreSuggestionsText', 'Enter to populate suggestions'),
+      selectizeInput('suggestionsInput', 'Select search input', choices = NULL, multiple = FALSE, selected = NULL),
+      uiOutput("defaultSuggestions"),
       uiOutput("suggestions")
     ),
     
@@ -30,17 +33,33 @@ server <- function(input, output, session) {
     selectInput("entityField", strong(paste0('Select a ', entity, ' property')), config[[entity]]$searchProperties)
   })
   
-  output$suggestions <- renderUI({
-    entity <<- input$entityLabel
+  output$defaultSuggestions <- renderUI({
     entityField <<- input$entityField
-    print("before")
     if(is.null(entityField)) return(NULL)
-    print("after")
-    suggestionsQuery <- paste0("MATCH (n:",entity,") RETURN DISTINCT n.",entityField," as choices")
+    suggestionsQuery <- paste0("MATCH (n:",entity,") RETURN DISTINCT n.",entityField," as choices LIMIT 100")
+    #print(suggestionsQuery)
     choices <- cypher(graph, suggestionsQuery)
-    selectizeInput('suggestionsInput', 'Select search input', choices = c("", choices), multiple = FALSE, selected = NULL, options = list(placeholder = 'Type for suggestions'))
+    #print(choices)
+    #selectizeInput('suggestionsInput', 'Select search input', choices = choices, multiple = FALSE)
+    updateSelectizeInput(session, 'suggestionsInput', choices = c("", choices), selected = NULL, options = list())
+    return(NULL)
   })
   
+  
+  output$suggestions <- renderUI({
+    selectText <<- input$PreSuggestionsText
+    print("test")
+    print(selectText)
+    if(is.null(entityField)) return(NULL)
+    #selectText <<- selectText
+    suggestionsQuery <- paste0("MATCH (n:",entity,") WHERE toString(n.",entityField,") CONTAINS {selectText} RETURN DISTINCT n.",entityField," as choices LIMIT 100")
+    print(suggestionsQuery)
+    choices <- cypher(graph, suggestionsQuery, selectText = selectText)
+    print(choices)
+    #selectizeInput('suggestionsInput', 'Select search input', choices = choices, multiple = FALSE)
+    updateSelectizeInput(session, 'suggestionsInput', choices = c("", choices), selected = NULL, options = list())
+    return(NULL)
+  })
 }
 
 shinyApp(ui, server)
