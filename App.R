@@ -19,8 +19,10 @@ ui <- fluidPage(
     sidebarPanel(
       selectInput("entityLabel","Entity Type", config$labels, selected = "Gene"),
       uiOutput("fileInputWrapper"),
+      checkboxInput("createNode", "Create Node", value = FALSE, width = NULL),
       uiOutput("requiredFields"),
       tags$hr(),
+      checkboxInput("createRelation", "Create Relationship", value = FALSE, width = NULL),
       uiOutput("relationshipNameWrapper"),
       uiOutput("ToFieldInFromNodeWrapper"),
       #uiOutput("uploadBtn")
@@ -54,7 +56,7 @@ server <- function(input, output, session) {
       })
     
     output$requiredFields <- renderUI({
-      if (is.null(df)) return(NULL)
+      if (is.null(df) || !input$createNode) return(NULL)
       nodeProperties <- config[[entity]]$properties
       lapply(1:length(nodeProperties), function(i) {
         selectInput(nodeProperties[i], strong(paste0('Select ', nodeProperties[i])), c(list(selectField), names(df)))
@@ -62,12 +64,12 @@ server <- function(input, output, session) {
     })
     
     output$ToFieldInFromNodeWrapper <- renderUI({
-      if (is.null(df) || !config[[entity]]$createRelation) return(NULL)
+      if (is.null(df) || !input$createRelation) return(NULL)
       selectInput("ToFieldInFromNode","Select TO field in FROM node", c(list(selectField), names(df)))
     })
     
     output$relationshipNameWrapper <- renderUI({
-      if (is.null(df) || !config[[entity]]$createRelation) return(NULL)
+      if (is.null(df) || !input$createRelation) return(NULL)
       selectInput("relationshipName", "Select Name of the Relationship", c(list(selectField), config$Relationships))
     })
 
@@ -76,6 +78,7 @@ server <- function(input, output, session) {
 
 
   observeEvent(input$upload, {
+    print("testing observe")
     # Below line to make this reactive element work
     print("test")
     error <- FALSE
@@ -93,7 +96,7 @@ server <- function(input, output, session) {
         }
       } 
     }
-    if(!error && config[[entity]]$createRelation && (is.null(input[["relationshipName"]]) || input[["relationshipName"]] == selectField || is.null(input[["ToFieldInFromNode"]]) || input[["ToFieldInFromNode"]] == selectField)){
+    if(!error && input$createRelation && (is.null(input[["relationshipName"]]) || input[["relationshipName"]] == selectField || is.null(input[["ToFieldInFromNode"]]) || input[["ToFieldInFromNode"]] == selectField)){
       error = TRUE
       errorMsg = "Please select relationship fields"
     }
@@ -120,7 +123,7 @@ server <- function(input, output, session) {
     propertiesList <- list()
     relationshipList <- list()
     nodeProperties <- config[[entity]]$properties
-    if(config[[entity]]$createRelation){
+    if(input$createRelation){
       relationshipName <- input[["relationshipName"]]
       relationshipConfig <- config[[relationshipName]]
     }
@@ -137,7 +140,7 @@ server <- function(input, output, session) {
       
       counter <- counter+1
       propertiesList[[counter]] = properties
-      if(config[[entity]]$createRelation){
+      if(input$createRelation){
         relationship <- list()
         relationship[["fromId"]] = df[[input[[relationshipConfig$fromField]]]][i]
         relationship[["toId"]] = df[[input[["ToFieldInFromNode"]]]][i]
@@ -147,7 +150,7 @@ server <- function(input, output, session) {
         nodeQuery <- paste0("UNWIND {propertiesList} AS properties MERGE (n:",entity," {id: properties.id}) SET n = properties")
         #print(i)
         cypher(graph, nodeQuery, propertiesList = propertiesList)
-        if(config[[entity]]$createRelation){
+        if(input$createRelation){
           relationQuery <- paste0("UNWIND {relationshipList} AS relationship
                                   MATCH (a:",relationshipConfig$fromNode," {",relationshipConfig$fromField,": relationship.fromId}),
                                   (b:",relationshipConfig$toNode," {",relationshipConfig$toField,": relationship.toId})
