@@ -6,28 +6,27 @@
   "labels": ["OMIM", "Gene", "Phenotype", "Exon", "GeneBody", "Transcript"],
   "OMIM": {
     "properties": ["id", "name", "prefix"],
-    "createRelation": false,
-    "relation": {}
+    "searchProperties": ["id", "name"]
   },
   "Gene": {
-    "properties": ["id", "symbol", "name", "Cytolocation", "ensembleID", "summary"],
-    "createRelation": true
+    "properties": ["id", "name", "cytoLocation", "chromosome", "ensembleID"],
+    "searchProperties": ["id", "name", "ensembleID"]
   },
   "Phenotype": {
     "properties": ["id", "name", "frequency", "dBType", "modifier", "sex", "aspect"],
-    "createRelation": true
+    "searchProperties": ["id"]
   },
   "GeneBody" : {
     "properties": ["id", "name", "havanaID", "start", "end", "strand"],
-    "createRelation": true
+    "searchProperties": ["id", "name"]
   },
   "Transcript" : {
-    "properties": ["id", "name", "havanaID", "start", "end", "type"],
-    "createRelation": true
+    "properties": ["id", "name", "geneID", "havanaID", "start", "end", "type"],
+    "searchProperties": ["id", "name", "geneID"]
   },
   "Exon" : {
     "properties": ["id", "name", "exonNumber", "transcriptID", "start", "end"],
-    "createRelation": true
+    "searchProperties": ["id", "name", "transcriptID"]
   },
   "Relationships": ["GeneToOMIM", "PhenotypeCauses", "GeneLocates","locateTranscript","locateExon"],
   "GeneToOMIM" : {
