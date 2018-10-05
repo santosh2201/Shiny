@@ -9,8 +9,8 @@
     "searchProperties": ["id", "name"]
   },
   "Gene": {
-    "properties": ["id", "name", "cytoLocation", "chromosome", "ensembleID"],
-    "searchProperties": ["id", "name", "ensembleID"]
+    "properties": ["id", "name", "cytoLocation", "chromosome", "ensembleID", "symbol", "summary"],
+    "searchProperties": ["id", "name", "ensembleID", "symbol"]
   },
   "Phenotype": {
     "properties": ["id", "name", "frequency", "dBType", "modifier", "sex", "aspect"],
