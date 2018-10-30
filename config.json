@@ -10,8 +10,8 @@
   },
   "Gene": {
     "properties": ["id", "name", "cytoLocation", "chromosome", "ensembleID", "symbol", "summary"],
-    "searchProperties": ["id", "name", "ensembleID", "symbol"]
-  },
+    "searchProperties": ["id","ensembleID", "symbol"]
+  }, 
   "Phenotype": {
     "properties": ["id", "name", "frequency", "dBType", "modifier", "sex", "aspect"],
     "searchProperties": ["id"]
@@ -44,5 +44,5 @@
   "locateExon" : {
     "fromNode": "Exon", "toNode": "Transcript", "fromField": "id", "toField": "id"
   },
-  "SearchType": ["EntrezID", "Gene-Name", "Phenotype-Series-Number", "mimID", "EnsembleID"]
+  "SearchType": ["EntrezID", "Gene-symbol", "Phenotype-Series-Number", "mimID", "EnsembleID"]
 }
