@@ -4,6 +4,7 @@ library(data.table)
 library(rjson)
 library(visNetwork)
 
+
 config <- fromJSON(file="config.json")
 options(shiny.maxRequestSize=(config$maxRequestSize*1024^2))
 graph = startGraph(config$graphUrl, username=config$username, password=config$password)
@@ -32,7 +33,7 @@ ui <- fluidPage(
     mainPanel(
       
       # Output: Data file ----
-      tableOutput("results")
+      visNetworkOutput("results")
       
     )
   )
@@ -88,7 +89,7 @@ server <- function(input, output, session) {
   
   
   observeEvent(input$createSearchBtn, {
-    output$results <- renderTable({
+    output$results <- renderVisNetwork({
       
       id <<- input$suggestionsInput
       
@@ -105,7 +106,6 @@ server <- function(input, output, session) {
           print('numeric')
         }else {
           id <<- paste0("'", id, "'")
-          print('String')
         }
         
         
@@ -114,7 +114,24 @@ server <- function(input, output, session) {
                   where ",entity,".",entityField ," = ",id," 
                 RETURN OMIM.name,OMIM.id,Gene.name,Gene.id,Gene.ensembleID,Gene.Cytolocation,GeneBody.start,GeneBody.end,GeneBody.strand,Phenotype.id,Phenotype.aspect,Gene.summary")
         
+        
       df <- cypher(graph,query)
+      nodes <- data.frame(id=union(df$OMIM.id, union(df$Gene.id,  df$Phenotype.id)),label=union(df$OMIM.name, union(df$Gene.name,  df$Phenotype.id)))
+      print("dataframe is");
+      print(nodes)
+      
+      query <- paste0( "MATCH (Phenotype:Phenotype)-[u:PhenotypeCauses]->(OMIM:OMIM)<-[t:GeneToOMIM]
+      -(Gene:Gene)-[s:GeneLocates]->(GeneBody:GeneBody) where ",entity,".",entityField ," = ",id," 
+      RETURN Gene.id as from, OMIM.id as to, Type(t) As label 
+      UNION 
+      MATCH (Phenotype:Phenotype)-[u:PhenotypeCauses]->(OMIM:OMIM)<-[t:GeneToOMIM]
+      -(Gene:Gene)-[s:GeneLocates]->(GeneBody:GeneBody) where ",entity,".",entityField ," = ",id," 
+      RETURN Phenotype.id as from, OMIM.id as to, Type(u) As label" )
+      
+      edges <- cypher(graph,query)
+      print(edges)
+      
+      visNetwork(nodes, edges)
       
       if( entity != "Phenotype")
       if(is.null(nrow(df))){
@@ -200,8 +217,8 @@ server <- function(input, output, session) {
       
       
       
-      return (df)
-      
+      #return (df)
+      visNetwork(nodes, edges)
     })
     
   })
