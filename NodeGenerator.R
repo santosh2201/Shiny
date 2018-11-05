@@ -2,7 +2,7 @@ library(shiny)
 library(RNeo4j)
 library(data.table)
 library(rjson)
-library(assertive)
+library(visNetwork)
 
 config <- fromJSON(file="config.json")
 options(shiny.maxRequestSize=(config$maxRequestSize*1024^2))
@@ -23,9 +23,7 @@ ui <- fluidPage(
       selectizeInput('suggestionsInput', 'Select search input', choices = NULL, multiple = FALSE, selected = NULL),
       uiOutput("defaultSuggestions"),
       uiOutput("suggestions"),
-      selectInput("searchType","Select search Criteria", config$SearchType),
       tags$hr(),
-      uiOutput("tempCode"),
       uiOutput("searchbtn")
     ),
     
@@ -88,103 +86,109 @@ server <- function(input, output, session) {
   })
   
   
-  output$tempCode <- renderUI({
-    id <<- input$suggestionsInput
-    searchType <<- input$searchType
-    df <- data.frame()
-    if(input$searchType=="Gene-Name" || input$searchType == "EnsembleID" || input$searchType == "Phenotype-Series-Number" ){
-      id <<- paste0("'", id, "'")
-    }
-    return(NULL)
-  })
-  
   
   observeEvent(input$createSearchBtn, {
     output$results <- renderTable({
-    
+      
+      id <<- input$suggestionsInput
+      
       if(is.null(id) || id==""){
         return(NULL)
       }
+        entity <<- input$entityLabel
+        entityField <<- input$entityField
+        df <- data.frame()
+        
+        
+        
+        if(entity == "Gene" || entity == "OMIM" && entityField == "id"){
+          print('numeric')
+        }else {
+          id <<- paste0("'", id, "'")
+          print('String')
+        }
+        
         
         query <-
-        paste0("MATCH (Phenotype:Phenotype)-[u:PhenotypeCauses]-(MIM:OMIM)-[t:GeneToOMIM]-(Gene:Gene)-[s:GeneLocates]-(GeneBody:GeneBody)
-                  where Gene.id = ",id," or Gene.ensembleID = ",id," or Gene.symbol = ",id," or MIM.id = ",id," or Phenotype.id = ",id,"
-                RETURN MIM.name,MIM.id,Gene.name,Gene.id,Gene.ensembleID,Gene.Cytolocation,GeneBody.start,GeneBody.end,GeneBody.strand,Phenotype.id,Phenotype.aspect,Gene.summary")
+        paste0("MATCH (Phenotype:Phenotype)-[u:PhenotypeCauses]-(OMIM:OMIM)-[t:GeneToOMIM]-(Gene:Gene)-[s:GeneLocates]-(GeneBody:GeneBody)
+                  where ",entity,".",entityField ," = ",id," 
+                RETURN OMIM.name,OMIM.id,Gene.name,Gene.id,Gene.ensembleID,Gene.Cytolocation,GeneBody.start,GeneBody.end,GeneBody.strand,Phenotype.id,Phenotype.aspect,Gene.summary")
         
       df <- cypher(graph,query)
       
-      if( searchType != "Phenotype-Series-Number")
+      if( entity != "Phenotype")
       if(is.null(nrow(df))){
         query <-
-        paste0("MATCH (MIM:OMIM)-[t:GeneToOMIM]-(Gene:Gene)-[s:GeneLocates]-(GeneBody:GeneBody)
-                  where Gene.id = ",id," or Gene.ensembleID = ",id," or Gene.symbol = ",id," or MIM.id = ",id,"
-                RETURN MIM.name,MIM.id,Gene.name,Gene.id,Gene.ensembleID,Gene.Cytolocation,GeneBody.start,GeneBody.end,GeneBody.strand,Gene.summary")
+        paste0("MATCH (OMIM:OMIM)-[t:GeneToOMIM]-(Gene:Gene)-[s:GeneLocates]-(GeneBody:GeneBody)
+                  where ",entity,".",entityField ," = ",id,"
+                RETURN OMIM.name,OMIM.id,Gene.name,Gene.id,Gene.ensembleID,Gene.Cytolocation,GeneBody.start,GeneBody.end,GeneBody.strand,Gene.summary")
         df <- cypher(graph,query)
       }
       
       
-      if(searchType != "EnsembleID")
+      if(entity != "GeneBody")
       if(is.null(nrow(df))){
         query <-
-          paste0("MATCH (Phenotype:Phenotype)-[u:PhenotypeCauses]-(MIM:OMIM)-[t:GeneToOMIM]-(Gene:Gene)
-                  where Gene.id = ",id," or Gene.symbol = ",id," or MIM.id = ",id," or Phenotype.id = ",id,"
-                RETURN MIM.name,MIM.id,Gene.name,Gene.id,Gene.ensembleID,Gene.Cytolocation,Phenotype.id,Phenotype.aspect,Gene.summary")
+          paste0("MATCH (Phenotype:Phenotype)-[u:PhenotypeCauses]-(OMIM:OMIM)-[t:GeneToOMIM]-(Gene:Gene)
+                  where ",entity,".",entityField ," = ",id,"
+                RETURN OMIM.name,OMIM.id,Gene.name,Gene.id,Gene.ensembleID,Gene.Cytolocation,Phenotype.id,Phenotype.aspect,Gene.summary")
         df <- cypher(graph,query)
       }
 
-      if( searchType != "EnsembleID" && searchType != "Phenotype-Series-Number")
+      if( entity != "GeneBody" && entity != "Phenotype")
       if(is.null(nrow(df))){
         query <-
-          paste0("MATCH (MIM:OMIM)-[t:GeneToOMIM]-(Gene:Gene)
-                 where Gene.id = ",id," or Gene.symbol = ",id," or MIM.id = ",id,"
-                 RETURN MIM.name,MIM.id,Gene.name,Gene.id,Gene.ensembleID,Gene.Cytolocation,Gene.summary")
+          paste0("MATCH (OMIM:OMIM)-[t:GeneToOMIM]-(Gene:Gene)
+                 where ",entity,".",entityField ," = ",id,"
+                 RETURN OMIM.name,OMIM.id,Gene.name,Gene.id,Gene.ensembleID,Gene.Cytolocation,Gene.summary")
         df <- cypher(graph,query)
       }
 
-      if(searchType == "Phenotype-Series-Number" || searchType == "mimID")
+      if(entity == "Phenotype" || entity == "OMIM")
       if(is.null(nrow(df))){
         query <-
-          paste0("MATCH (Phenotype:Phenotype)-[u:PhenotypeCauses]-(MIM:OMIM)
-                  where MIM.id = ",id," or Phenotype.id = ",id,"
-                RETURN MIM.name,MIM.id,Phenotype.id,Phenotype.aspect")
+          paste0("MATCH (Phenotype:Phenotype)-[u:PhenotypeCauses]-(OMIM:OMIM)
+                  where ",entity,".",entityField ," = ",id,"
+                RETURN OMIM.name,OMIM.id,Phenotype.id,Phenotype.aspect")
         df <- cypher(graph,query)
       }
       
-      if(searchType != "Phenotype-Series-Number" || searchType != "mimID")
+      if(entity != "Phenotype" &&
+         entity != "OMIM")
       if(is.null(nrow(df))){
         query <-
           paste0("MATCH (Gene:Gene)-[s:GeneLocates]-(GeneBody:GeneBody)
-                  where Gene.id = ",id," or Gene.ensembleID = ",id," or Gene.symbol = ",id,"
+                  where ",entity,".",entityField ," = ",id,"
                 RETURN Gene.name,Gene.id,Gene.ensembleID,Gene.Cytolocation,GeneBody.start,GeneBody.end,GeneBody.strand,Gene.summary")
         df <- cypher(graph,query)
         }
      
       
-      if(searchType == "EntrezID" || searchType == "Gene-Name")
+      if(entity == "Gene")
       if(is.null(nrow(df))){
         query <-
           paste0("MATCH (Gene:Gene)
-                  where Gene.id = ",id," or Gene.symbol = ",id,"
+                  where ",entity,".",entityField ," = ",id,"
                 RETURN Gene.name,Gene.id,Gene.ensembleID,Gene.Cytolocation,Gene.summary")
         df <- cypher(graph,query)
         }
       
       
-      if(searchType != "mimID")
+      if(entity != "OMIM")
       if(is.null(nrow(df))){
         query <-
-          paste0("MATCH (MIM:OMIM)
-                 where MIM.id = ",id,"
-                 RETURN MIM.name,MIM.id,MIM.Prefix")
+          paste0("MATCH (OMIM:OMIM)
+                 where ",entity,".",entityField ," = ",id,"
+                 RETURN OMIM.name,OMIM.id,OMIM.Prefix")
         df <- cypher(graph,query)
       }
       
       
-      if(searchType == "Phenotype-Series-Number")
+      if(entity == "Phenotype")
       if(is.null(nrow(df))){
         query <-
           paste0("MATCH (Phenotype:Phenotype)
-                  where Phenotype.id = ",id,"
+                  where ",entity,".",entityField ," = ",id,"
                 RETURN Phenotype.id,Phenotype.aspect,Phenotype.frequency,Phenotype.dBType")
         df <- cypher(graph,query)
       }
