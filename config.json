@@ -1,7 +1,7 @@
 {
-  "graphUrl": "http://zlab1.chmccorp.cchmc.org:7474/db/data/",
+  "graphUrl": "http://localhost:7474/db/data/",
   "username": "neo4j",
-  "password": "neo$pass",
+  "password": "nsr",
   "maxRequestSize": 400,
   "labels": ["OMIM", "Gene", "Phenotype", "Exon", "GeneBody", "Transcript"],
   "OMIM": {

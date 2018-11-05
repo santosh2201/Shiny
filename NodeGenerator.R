@@ -4,7 +4,6 @@ library(data.table)
 library(rjson)
 library(visNetwork)
 
-
 config <- fromJSON(file="config.json")
 options(shiny.maxRequestSize=(config$maxRequestSize*1024^2))
 graph = startGraph(config$graphUrl, username=config$username, password=config$password)
@@ -102,7 +101,7 @@ server <- function(input, output, session) {
         
         
         
-        if(entity == "Gene" || entity == "OMIM" && entityField == "id"){
+        if((entity == "Gene" || entity == "OMIM") && entityField == "id"){
           print('numeric')
         }else {
           id <<- paste0("'", id, "'")
