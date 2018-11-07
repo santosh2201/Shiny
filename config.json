@@ -41,5 +41,5 @@
   "locateExon" : {
     "fromNode": "Exon", "toNode": "Transcript", "fromField": "id", "toField": "id"
   },
-  "SearchType": ["EntrezID", "Gene-symbol", "Phenotype-Series-Number", "mimID", "EnsembleID"]
+  "searchLabels": ["OMIM", "Gene", "Phenotype"]
 }
