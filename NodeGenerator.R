@@ -16,7 +16,7 @@ graph = startGraph(credentials$graphUrl, username=credentials$username, password
 
 
 
-ui <- fluidPage(theme = shinytheme("paper"),
+ui <- fluidPage(
   # App title ----
   headerPanel("Query Explorer"),
   sidebarLayout(
@@ -79,7 +79,7 @@ server <- function(input, output, session) {
       load = I("function(query, callback) {
                  if (!query.length) return callback();
                  var username = 'neo4j';
-                 var password = 'nsr';
+                 var password = 'neo$pass';
                  var usrpsw = username + ':' + password;
                  var authorisation = 'Basic ' + btoa(usrpsw);
                  var entity = $('#entityLabel').val();
@@ -93,7 +93,7 @@ server <- function(input, output, session) {
                 });
 
                 $.ajax({
-                  url: 'http://localhost:7474/db/data/transaction/commit',
+                  url: 'http://zlab1.chmccorp.cchmc.org:7474/db/data/transaction/commit',
                   type: 'POST',
                   data: JSON.stringify({ 'statements': [{ 'statement': neoQuery }] }),
                   contentType: 'application/json',
@@ -294,7 +294,7 @@ server <- function(input, output, session) {
         })
         
         
-        datatable(df,filter = 'top', options = list(scrollX =TRUE),class = 'cell-border stripe')
+        datatable(df,filter = 'top', options = list(scrollX =TRUE))
       })
       return(NULL)
     })
