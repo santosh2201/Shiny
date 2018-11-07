@@ -1,3 +1,5 @@
+source("packageInstaller.R")
+
 library(shiny)
 library(RNeo4j)
 library(data.table)

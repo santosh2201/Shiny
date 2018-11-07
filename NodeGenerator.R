@@ -1,3 +1,5 @@
+source("packageInstaller.R")
+
 library(shiny)
 library(RNeo4j)
 library(data.table)
@@ -99,7 +101,6 @@ server <- function(input, output, session) {
                   contentType: 'application/json',
                   accept: 'application/json; charset=UTF-8' 
                  }).done(function (data) {
-                  console.log(data.results[0].data);
                   callback(data.results[0].data)
                  });
         }")
