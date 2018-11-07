@@ -4,8 +4,9 @@ library(data.table)
 library(rjson)
 
 config <- fromJSON(file="config.json")
+credentials <- fromJSON(file="credentials.json")
 options(shiny.maxRequestSize=(config$maxRequestSize*1024^2))
-graph = startGraph(config$graphUrl, username=config$username, password=config$password)
+graph = startGraph(credentials$graphUrl, username=credentials$username, password=credentials$password)
 
 # Variables
 entity <- NULL
@@ -25,7 +26,6 @@ ui <- fluidPage(
       checkboxInput("createRelation", "Create Relationship", value = FALSE, width = NULL),
       uiOutput("relationshipNameWrapper"),
       uiOutput("ToFieldInFromNodeWrapper"),
-      #uiOutput("uploadBtn")
       uiOutput("showError"),
       actionButton("upload", "Upload", class = "btn-primary")
     ),
@@ -78,9 +78,7 @@ server <- function(input, output, session) {
   
   
   observeEvent(input$upload, {
-    print("testing observe")
     # Below line to make this reactive element work
-    print("test")
     error <- FALSE
     errorMsg <- NULL
     if (is.null(df)){
@@ -128,7 +126,6 @@ server <- function(input, output, session) {
       relationshipConfig <- config[[relationshipName]]
     }
     counter <- 0
-    print(input[["id"]])
     for (i in 1:nrow(df)) {
       properties <- list()
       if(is.na(df[[input[["id"]]]][i])){
@@ -148,7 +145,6 @@ server <- function(input, output, session) {
       }
       if (counter==nodesPerRequest) {
         nodeQuery <- paste0("UNWIND {propertiesList} AS properties MERGE (n:",entity," {id: properties.id}) SET n = properties")
-        #print(i)
         cypher(graph, nodeQuery, propertiesList = propertiesList)
         if(input$createRelation){
           relationQuery <- paste0("UNWIND {relationshipList} AS relationship
