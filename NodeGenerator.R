@@ -4,6 +4,8 @@ library(data.table)
 library(rjson)
 library(visNetwork)
 library(DT)
+library(shinythemes)
+
 
 config <- fromJSON(file="config.json")
 credentials <- fromJSON(file="credentials.json")
@@ -14,7 +16,7 @@ graph = startGraph(credentials$graphUrl, username=credentials$username, password
 
 
 
-ui <- fluidPage(
+ui <- fluidPage(theme = shinytheme("paper"),
   # App title ----
   headerPanel("Query Explorer"),
   sidebarLayout(
@@ -292,9 +294,7 @@ server <- function(input, output, session) {
         })
         
         
-        datatable(df, options = list(
-          scrollX =TRUE
-        ))
+        datatable(df,filter = 'top', options = list(scrollX =TRUE),class = 'cell-border stripe')
       })
       return(NULL)
     })
