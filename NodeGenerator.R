@@ -76,10 +76,21 @@ server <- function(input, output, session) {
         }"),
       load = I("function(query, callback) {
                  if (!query.length) return callback();
+                 var username = 'neo4j';
+                 var password = 'nsr';
+                 var usrpsw = username + ':' + password;
+                 var authorisation = 'Basic ' + btoa(usrpsw);
                  var entity = $('#entityLabel').val();
                  var entityField = $('#entityField').val();
                  var neoQuery = 'MATCH (n:'+entity+') WHERE toString(n.'+entityField+') CONTAINS '+JSON.stringify(query)+' RETURN n.'+entityField+' AS field LIMIT 50';
-                 $.ajax({
+
+                $.ajaxSetup({
+                  headers: {
+                    'Authorization': authorisation
+                  }
+                });
+
+                $.ajax({
                   url: 'http://localhost:7474/db/data/transaction/commit',
                   type: 'POST',
                   data: JSON.stringify({ 'statements': [{ 'statement': neoQuery }] }),
