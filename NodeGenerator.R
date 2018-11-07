@@ -67,7 +67,7 @@ server <- function(input, output, session) {
   output$suggestions <- renderUI({
     entity <<- input$entityLabel
     entityField <<- input$entityField
-    updateSelectizeInput(session, 'suggestionsInput', choices = NULL, options = list(
+    updateSelectizeInput(session, 'suggestionsInput', choices = NULL, selected = NULL, options = list(
       options = list(),
       create = FALSE,
       valueField = 'row',
