@@ -204,7 +204,7 @@ server <- function(input, output, session) {
         }
       
       
-      if(entity != "OMIM")
+      if(entity == "OMIM")
         if(is.null(nrow(df))){
           query <-
             paste0("MATCH (OMIM:OMIM)
@@ -259,24 +259,23 @@ server <- function(input, output, session) {
           
           
           query <- paste0( "MATCH (Phenotype:Phenotype)-[u:PhenotypeCauses]->(OMIM:OMIM)<-[t:GeneToOMIM]
-                           -(Gene:Gene)-[s:GeneLocates]->(GeneBody:GeneBody) where ",entity,".",entityField ," = ",id," 
+                           -(Gene:Gene) where ",entity,".",entityField ," = ",id," 
                            RETURN Gene.id as from, OMIM.id as to, Type(t) As label 
                            UNION 
                            MATCH (Phenotype:Phenotype)-[u:PhenotypeCauses]->(OMIM:OMIM)<-[t:GeneToOMIM]
-                           -(Gene:Gene)-[s:GeneLocates]->(GeneBody:GeneBody) where ",entity,".",entityField ," = ",id," 
+                           -(Gene:Gene) where ",entity,".",entityField ," = ",id," 
                            RETURN Phenotype.id as from, OMIM.id as to, Type(u) As label" )
           edges <- cypher(graph,query)
           print(edges)
           
           if(entity != "Phenotype" && is.null(edges)){
-            print("INSIDE")
             query <- paste0   ( "MATCH (OMIM:OMIM)<-[t:GeneToOMIM]
                                   -(Gene:Gene)-[s:GeneLocates]->(GeneBody:GeneBody) where ",entity,".",entityField ," = ",id," 
                                   RETURN Gene.id as from, OMIM.id as to, Type(t) As label" )
             edges <- cypher(graph,query)
           }
           if(entity != "Gene" && is.null(edges)){
-            print(entity)
+      
             query <- paste0   ( " MATCH (Phenotype:Phenotype)-[u:PhenotypeCauses]->(OMIM:OMIM) where ",entity,".",entityField ," = ",id," 
                                   RETURN Phenotype.id as from, OMIM.id as to, Type(u) As label " )
             edges <- cypher(graph,query)
