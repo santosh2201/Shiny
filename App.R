@@ -49,11 +49,11 @@ server <- function(input, output, session) {
   output$contents <- renderTable({
     req(input$file1)
     tryCatch({
-        df <<- fread(input$file1$datapath)
-      },
-      error = function(e) {
-        stop(safeError(e))
-      })
+      df <<- fread(input$file1$datapath)
+    },
+    error = function(e) {
+      stop(safeError(e))
+    })
     
     output$requiredFields <- renderUI({
       if (is.null(df) || !input$createNode) return(NULL)
@@ -72,11 +72,11 @@ server <- function(input, output, session) {
       if (is.null(df) || !input$createRelation) return(NULL)
       selectInput("relationshipName", "Select Name of the Relationship", c(list(selectField), config$Relationships))
     })
-
+    
     return(head(df))
   })
-
-
+  
+  
   observeEvent(input$upload, {
     print("testing observe")
     # Below line to make this reactive element work
@@ -110,7 +110,7 @@ server <- function(input, output, session) {
     if(error){
       return(NULL)
     }
-
+    
     progress <- Progress$new(session, min=1, max=nrow(df)/nodesPerRequest)
     on.exit(progress$close())
     progress$set(message = paste("Uploading ",entity," data to Neo4j"), detail = 'This may take a while...')
