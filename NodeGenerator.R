@@ -266,26 +266,21 @@ server <- function(input, output, session) {
                            RETURN Phenotype.id as from, OMIM.id as to, Type(u) As label" )
           edges <- cypher(graph,query)
           print(edges)
-          if(is.null(edges)) {
-            if(entity != "Phenotype"){
-              query <- paste0   ( "MATCH (OMIM:OMIM)<-[t:GeneToOMIM]
+          
+          if(entity != "Phenotype" && is.null(edges)){
+            print("INSIDE")
+            query <- paste0   ( "MATCH (OMIM:OMIM)<-[t:GeneToOMIM]
                                   -(Gene:Gene)-[s:GeneLocates]->(GeneBody:GeneBody) where ",entity,".",entityField ," = ",id," 
                                   RETURN Gene.id as from, OMIM.id as to, Type(t) As label" )
-              
-            }
-            if(entity != "Gene"){
-              print(entity)
-              query <- paste0   ( " MATCH (Phenotype:Phenotype)-[u:PhenotypeCauses]->(OMIM:OMIM) where ",entity,".",entityField ," = ",id," 
+            edges <- cypher(graph,query)
+          }
+          if(entity != "Gene" && is.null(edges)){
+            print(entity)
+            query <- paste0   ( " MATCH (Phenotype:Phenotype)-[u:PhenotypeCauses]->(OMIM:OMIM) where ",entity,".",entityField ," = ",id," 
                                   RETURN Phenotype.id as from, OMIM.id as to, Type(u) As label " )
-              
-            }
             edges <- cypher(graph,query)
             
-          }               
-          
-          
-          
-          
+          }
           
           visNetwork(nodes, edges, height = "700px", width = "200%") %>% 
             visOptions(highlightNearest = TRUE) %>%
