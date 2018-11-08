@@ -7,6 +7,7 @@ library(rjson)
 library(visNetwork)
 library(DT)
 library(shinythemes)
+library(shinyjs)
 
 
 config <- fromJSON(file="config.json")
@@ -19,6 +20,7 @@ graph = startGraph(credentials$graphUrl, username=credentials$username, password
 
 
 ui <- fluidPage(
+  useShinyjs(),
   # App title ----
   headerPanel("Query Explorer"),
   sidebarLayout(
@@ -28,6 +30,7 @@ ui <- fluidPage(
       selectizeInput('suggestionsInput', 'Select search input', choices = NULL, multiple = FALSE, selected = NULL),
       uiOutput("suggestions"),
       uiOutput("temp"),
+      hidden(p(id = "hiddenCredElement", paste0('{"url":"',credentials$graphUrl,'","username":"',credentials$username,'","password":"',credentials$password,'"','}'))),
       tags$hr(),
       uiOutput("searchbtn"), width = 3
     ),
@@ -73,6 +76,7 @@ server <- function(input, output, session) {
       valueField = 'row',
       labelField = 'row',
       searchField = 'row',
+      placeholder = 'Type for suggestions',
       render = I("{
                  option: function(item, escape) {
                   return '<div>' + item.row[0] + '</div>';
@@ -80,10 +84,8 @@ server <- function(input, output, session) {
         }"),
       load = I("function(query, callback) {
                  if (!query.length) return callback();
-                 var username = 'neo4j';
-                 var password = 'neo$pass';
-                 var usrpsw = username + ':' + password;
-                 var authorisation = 'Basic ' + btoa(usrpsw);
+                 var cred = JSON.parse($('#hiddenCredElement').html());
+                 var authorisation = 'Basic ' + btoa(cred.username + ':' + cred.password);
                  var entity = $('#entityLabel').val();
                  var entityField = $('#entityField').val();
                  var neoQuery = 'MATCH (n:'+entity+') WHERE toString(n.'+entityField+') CONTAINS '+JSON.stringify(query)+' RETURN n.'+entityField+' AS field LIMIT 50';
@@ -95,7 +97,7 @@ server <- function(input, output, session) {
                 });
 
                 $.ajax({
-                  url: 'http://zlab1.chmccorp.cchmc.org:7474/db/data/transaction/commit',
+                  url: cred.url+'transaction/commit',
                   type: 'POST',
                   data: JSON.stringify({ 'statements': [{ 'statement': neoQuery }] }),
                   contentType: 'application/json',
