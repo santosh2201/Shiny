@@ -42,9 +42,10 @@ ui <- fluidPage(
     mainPanel(
       # Output: Data file ----
       tabsetPanel(
+        id="outputTabs",
         tabPanel("Plot", visNetworkOutput("plot")),
         tabPanel("Table", dataTableOutput("results")),
-        selected = "Table"
+        selected = "Plot"
       )
     )
   )
@@ -274,6 +275,7 @@ server <- function(input, output, session) {
         
         datatable(df,filter = 'top', options = list(scrollX =TRUE))
       })
+      updateTabsetPanel(session, "outputTabs",selected = "Table")
       return(NULL)
     })
     
