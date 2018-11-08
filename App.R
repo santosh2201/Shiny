@@ -17,6 +17,7 @@ df <- NULL
 nodesPerRequest <- 500
 
 ui <- fluidPage(
+  theme = shinytheme("cerulean"),
   titlePanel("Data Uploader"),
   sidebarLayout(
     sidebarPanel(
