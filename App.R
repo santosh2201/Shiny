@@ -23,8 +23,7 @@ ui <- fluidPage(
       selectInput("entityLabel","Entity Type", config$labels, selected = "Gene"),
       uiOutput("fileInputWrapper"),
       checkboxInput("createNode", "Create Node", value = FALSE, width = NULL),
-      uiOutput("requiredFields"),
-      tags$hr(),
+      uiOutput("nodeFields"),
       checkboxInput("createRelation", "Create Relationship", value = FALSE, width = NULL),
       uiOutput("relationshipNameWrapper"),
       uiOutput("ToFieldInFromNodeWrapper"),
@@ -45,6 +44,7 @@ server <- function(input, output, session) {
   # Gets updated on change in entity select box
   output$fileInputWrapper <- renderUI({
     entity <<- input$entityLabel
+    df <<- NULL
     fileInput("file1", paste0("Upload ", entity," file"), multiple = FALSE, accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv"))
   })
   
@@ -57,7 +57,7 @@ server <- function(input, output, session) {
       stop(safeError(e))
     })
     
-    output$requiredFields <- renderUI({
+    output$nodeFields <- renderUI({
       if (is.null(df) || !input$createNode) return(NULL)
       nodeProperties <- config[[entity]]$properties
       lapply(1:length(nodeProperties), function(i) {
@@ -86,9 +86,13 @@ server <- function(input, output, session) {
     if (is.null(df)){
       error = TRUE
       errorMsg = "Please upload an input file"
+    }else if(!error && !input$createNode && !input$createRelation){
+      error = TRUE
+      errorMsg = "Please create either Node or Relation"
     }
+    
     nodeProperties <- config[[entity]]$properties
-    if(!error){
+    if(!error && input$createNode){
       for (field in nodeProperties) {
         if(is.null(input[[field]]) || input[[field]] == selectField){
           error = TRUE
@@ -103,7 +107,7 @@ server <- function(input, output, session) {
     
     output$showError <- renderText({
       if(error){
-        return(errorMsg)
+        stop(safeError(errorMsg))
       }
       return(NULL)
     })
