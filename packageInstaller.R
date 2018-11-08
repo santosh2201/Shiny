@@ -1,4 +1,4 @@
-list.of.packages <- c("shiny","RNeo4j","data.table","rjson","visNetwork","DT","shinyjs")
+list.of.packages <- c("shiny","RNeo4j","data.table","rjson","visNetwork","DT","shinyjs", "shinythemes")
 
 #checking missing packages from list
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]

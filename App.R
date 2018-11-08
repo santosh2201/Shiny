@@ -4,6 +4,7 @@ library(shiny)
 library(RNeo4j)
 library(data.table)
 library(rjson)
+library(shinythemes)
 
 config <- fromJSON(file="config.json")
 credentials <- fromJSON(file="credentials.json")

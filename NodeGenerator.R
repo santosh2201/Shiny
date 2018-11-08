@@ -34,15 +34,12 @@ ui <- fluidPage(
           paste0('{"url":"',credentials$graphUrl,'","username":"',credentials$username,'","password":"',credentials$password,'"','}')
         )
       ),
-      tags$hr(),
-      uiOutput("searchbtn"),
+      actionButton("createSearchBtn", "Search", class = "btn-primary"),
       width = 4
     ),
     
-    
     # Main panel for displaying outputs ----
     mainPanel(
-      
       # Output: Data file ----
       tabsetPanel(
         tabPanel("Plot", visNetworkOutput("plot")),
@@ -57,7 +54,7 @@ id <- NULL
 searchType <- NULL
 entity <- "OMIM"
 entityField <- NULL
-df <- NULL
+df <- data.frame()
 
 server <- function(input, output, session) {
 
@@ -106,33 +103,19 @@ server <- function(input, output, session) {
                   });
       }")
     ))
-    
     return(NULL)
   })
-  
-  
-  output$searchbtn <- renderUI({
-    actionButton("createSearchBtn", "Search", class = "btn-primary")
-  })
-  
-  
-  df <- data.frame()
-  
+
   observeEvent(input$createSearchBtn, {
     output$temp <- renderUI({
       
       id <<- input$suggestionsInput
-      
       if(is.null(id) || id==""){
         return(NULL)
       }
       entity <<- input$entityLabel
       entityField <<- input$entityField
-      
       df <<- data.frame()
-      
-      
-      
       if(!((entity == "Gene" || entity == "OMIM") && entityField == "id")){
         id <<- paste0("'", id, "'")
       }
