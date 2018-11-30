@@ -48,12 +48,12 @@ ui <- fluidPage(
     mainPanel(
       # Output: Data file ----
       tableOutput("contents")
-     # tabsetPanel(
-     #   id="outputTabs",
-     #   tabPanel("Plot", visNetworkOutput("plot")),
-     #   tabPanel("Table", dataTableOutput("results")),
+      # tabsetPanel(
+      #   id="outputTabs",
+      #   tabPanel("Plot", visNetworkOutput("plot")),
+      #   tabPanel("Table", dataTableOutput("results")),
       #  selected = "Plot"
-     # )
+      # )
     )
   )
 )
@@ -75,32 +75,30 @@ server <- function(input, output, session) {
                  }
   }"),
       load = I("function(query, callback) {
-                  if (!query.length) return callback();
-                  var cred = JSON.parse($('#hiddenCredElement').html());
-                  var authorisation = 'Basic ' + btoa(cred.username + ':' + cred.password);
-                  var entity = $('#entityLabel').val();
-                  var entityField = $('#entityField').val();
-                  var neoQuery = 'MATCH (n:Phenotype) WHERE toString(n.id) CONTAINS '+JSON.stringify(query)+' RETURN n.id AS field LIMIT 100';
-
-                  $.ajaxSetup({
-                    headers: {
-                      'Authorization': authorisation
-                    }
-                  });
-
-                  $.ajax({
-                    url: cred.url+'transaction/commit',
-                    type: 'POST',
-                    data: JSON.stringify({ 'statements': [{ 'statement': neoQuery }] }),
-                    contentType: 'application/json',
-                    accept: 'application/json; charset=UTF-8' 
-                  }).done(function (data) {
-                    callback(data.results[0].data)
-                  });
+               if (!query.length) return callback();
+               var cred = JSON.parse($('#hiddenCredElement').html());
+               var authorisation = 'Basic ' + btoa(cred.username + ':' + cred.password);
+               var entity = $('#entityLabel').val();
+               var entityField = $('#entityField').val();
+               var neoQuery = 'MATCH (n:Phenotype) WHERE toString(n.id) CONTAINS '+JSON.stringify(query)+' RETURN n.id AS field LIMIT 100';
+               $.ajaxSetup({
+               headers: {
+               'Authorization': authorisation
+               }
+               });
+               $.ajax({
+               url: cred.url+'transaction/commit',
+               type: 'POST',
+               data: JSON.stringify({ 'statements': [{ 'statement': neoQuery }] }),
+               contentType: 'application/json',
+               accept: 'application/json; charset=UTF-8' 
+               }).done(function (data) {
+               callback(data.results[0].data)
+               });
       }")
     ))
     return(NULL)
-  })
+    })
   output$contents <- renderTable({
     req(input$file1)
     tryCatch({
@@ -112,6 +110,6 @@ server <- function(input, output, session) {
     })
     return(head(df))
   })
-}
+  }
 
 shinyApp(ui,server)

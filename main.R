@@ -1,10 +1,21 @@
-shinyUI(
-  navbarPage(title=strong("GraphDB"), windowTitle = "GraphDB - connecting variants to phenotypes through genes and diseases",
-             fluid=TRUE, footer=includeHTML("tools/footer.html"),id="nav",
-             source('Server.R',local = TRUE)$value
-             
-  )
-)
+source("packageInstaller.R")
+
+library(shiny)
+library(RNeo4j)
+library(data.table)
+library(rjson)
+library(visNetwork)
+library(DT)
+library(shinythemes)
+library(shinyjs)
+library(vcfR)
+
+config <- fromJSON(file="config.json")
+credentials <- fromJSON(file="credentials.json")
+options(shiny.maxRequestSize=(config$maxRequestSize*1024^2))
 
 
+
+
+list <- 1:10000
 
